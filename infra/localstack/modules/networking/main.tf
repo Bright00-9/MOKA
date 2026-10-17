@@ -102,4 +102,4 @@ resource "aws_route_table_association" "private" {
 # NAT gateway intentionally omitted for the LocalStack build — Fargate tasks in
 # private subnets reach Secrets Manager/ECR through LocalStack's local network,
 # not real internet egress. The real-AWS build (separate directory) adds a NAT
-# gateway so private-subnet tasks can reach Paystack/Firebase over the internet.
+
