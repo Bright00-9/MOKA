@@ -1,0 +1,12 @@
+db_password             = "replace-with-a-strong-local-password"
+jwt_secret              = "replace-with-openssl-rand--base64-48-output"
+paystack_secret_key     = "sk_test_xxx"
+paystack_webhook_secret = "sk_test_xxx"
+firebase_project_id     = "moka-xxxxx"
+firebase_client_email   = "firebase-adminsdk-xxx@moka-xxxxx.iam.gserviceaccount.com"
+firebase_private_key    = "-----BEGIN PRIVATE KEY-----\nXXXX\n-----END PRIVATE KEY-----\n"
+platform_callback_url   = "https://moka.example.com/payment-callback"
+
+# backend_image is intentionally left out here — set it after the first apply
+# creates the ECR repo, once you've built and pushed an image to it (see README).
+

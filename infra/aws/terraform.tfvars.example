@@ -1,0 +1,21 @@
+# aws_profile          = "moka-prod"   # leave commented to use your default AWS credentials
+
+domain_name             = "api.moka.example.com"
+hosted_zone_id          = "Z0123456789ABCDEFGHIJ" # Route 53 zone that owns moka.example.com — must already exist
+
+db_password             = "replace-with-a-strong-generated-password"
+jwt_secret               = "replace-with-openssl-rand--base64-48-output"
+paystack_secret_key     = "sk_live_xxx" # real secret key once you're off Paystack test mode
+paystack_webhook_secret = "sk_live_xxx"
+firebase_project_id     = "moka-xxxxx"
+firebase_client_email   = "firebase-adminsdk-xxx@moka-xxxxx.iam.gserviceaccount.com"
+firebase_private_key    = "-----BEGIN PRIVATE KEY-----\nXXXX\n-----END PRIVATE KEY-----\n"
+platform_callback_url   = "https://api.moka.example.com/payment-callback"
+
+# backend_image is intentionally left out here — set it after the first apply
+# creates the ECR repo, once you've built and pushed an image to it (see README).
+
+# Uncomment to relax defaults while you're still testing this directory against
+# real AWS (both save some money; flip back before this holds real traffic):
+# db_multi_az            = false
+# backend_desired_count  = 1

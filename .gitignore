@@ -1,0 +1,67 @@
+# Environment files and local secrets
+.env
+.env.*
+!.env.example
+!**/.env.example
+**/service-account*.json
+**/*serviceAccount*.json
+
+# Node.js
+**/node_modules/
+backend/dist/
+backend/coverage/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Flutter and Dart
+app/.dart_tool/
+app/.packages
+app/.pub/
+app/build/
+app/.flutter-plugins
+app/.flutter-plugins-dependencies
+app/.android/
+app/.ios/
+app/ios/Flutter/.last_build_id
+app/ios/Flutter/ephemeral/
+app/ios/Pods/
+app/ios/.symlinks/
+app/android/.gradle/
+app/android/local.properties
+app/android/key.properties
+app/lib/firebase_options.dart
+app/android/app/google-services.json
+app/ios/Runner/GoogleService-Info.plist
+*.jks
+*.keystore
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+*.tfvars
+!*.tfvars.example
+*_override.tf
+*_override.tf.json
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+
+# Operating systems and editors
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.swp
+*.swo

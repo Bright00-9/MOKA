@@ -1,0 +1,174 @@
+// Moka — production schema
+// Models the access-fee marketplace: customers pay to unlock star-tier providers,
+// providers pay a flat fee to apply to jobs. No peer-to-peer money moves through the app.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER
+  PROVIDER
+  ADMIN
+}
+
+enum JobStatus {
+  OPEN
+  ASSIGNED
+  COMPLETED
+  CANCELLED
+}
+
+enum ApplicationStatus {
+  PENDING_PAYMENT // provider initiated payment, awaiting Paystack confirmation
+  APPLIED         // fee paid, application is live
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+enum UnlockStatus {
+  PENDING_PAYMENT
+  ACTIVE
+  EXPIRED
+}
+
+enum PaymentPurpose {
+  STAR_TIER_UNLOCK
+  JOB_APPLICATION_FEE
+}
+
+enum PaymentStatus {
+  INITIATED
+  SUCCESS
+  FAILED
+  ABANDONED
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  phone         String?  @unique
+  passwordHash  String
+  role          Role
+  fullName      String
+  fcmToken      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Provider-only fields
+  starLevel     Int?      // 1-5, null for customers
+  bio           String?
+  skills        String[]  @default([])
+  verified      Boolean   @default(false)
+
+  jobsPosted        Job[]              @relation("CustomerJobs")
+  applications       JobApplication[]  @relation("ProviderApplications")
+  starTierUnlocks    StarTierUnlock[]  @relation("CustomerUnlocks")
+  payments           Payment[]
+  notifications      Notification[]
+
+  @@index([role])
+  @@index([role, starLevel])
+}
+
+model Job {
+  id                 String     @id @default(uuid())
+  customer           User       @relation("CustomerJobs", fields: [customerId], references: [id])
+  customerId         String
+  title              String
+  description        String
+  category           String
+  location            String
+  budgetMin          Int?
+  budgetMax          Int?
+  requiredStarLevel  Int?       // null = open to all tiers, else minimum tier customer unlocked
+  status             JobStatus  @default(OPEN)
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+  assignedProviderId String?
+
+  applications JobApplication[]
+
+  @@index([status])
+  @@index([customerId])
+}
+
+model StarTierUnlock {
+  id            String       @id @default(uuid())
+  customer      User         @relation("CustomerUnlocks", fields: [customerId], references: [id])
+  customerId    String
+  starLevel     Int          // tier unlocked, 1-5
+  status        UnlockStatus @default(PENDING_PAYMENT)
+  payment       Payment?     @relation(fields: [paymentId], references: [id])
+  paymentId     String?      @unique
+  expiresAt     DateTime?    // unlocks can be time-boxed (e.g. 30 days)
+  createdAt     DateTime     @default(now())
+
+  @@index([customerId, starLevel])
+}
+
+model JobApplication {
+  id          String             @id @default(uuid())
+  job         Job                @relation(fields: [jobId], references: [id])
+  jobId       String
+  provider    User               @relation("ProviderApplications", fields: [providerId], references: [id])
+  providerId  String
+  status      ApplicationStatus  @default(PENDING_PAYMENT)
+  payment     Payment?           @relation(fields: [paymentId], references: [id])
+  paymentId   String?            @unique
+  message     String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@unique([jobId, providerId])
+  @@index([jobId])
+  @@index([providerId])
+}
+
+model Payment {
+  id             String          @id @default(uuid())
+  user           User            @relation(fields: [userId], references: [id])
+  userId         String
+  purpose        PaymentPurpose
+  amountKobo     Int             // store in kobo (or pesewas) to avoid float errors
+  currency       String          @default("GHS")
+  paystackRef    String          @unique
+  status         PaymentStatus   @default(INITIATED)
+  rawWebhookData Json?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  starTierUnlock StarTierUnlock?
+  jobApplication JobApplication?
+
+  @@index([paystackRef])
+  @@index([userId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  title     String
+  body      String
+  data      Json?
+  sentAt    DateTime?
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+// Platform-configurable pricing, so fees aren't hardcoded and can change without a deploy
+model PricingConfig {
+  id                   String   @id @default("singleton")
+  jobApplicationFeeKobo Int     @default(500000) // e.g. GHS 50.00 flat provider fee
+  starTierUnlockKobo   Json     // { "1": 0, "2": 1000000, "3": 2000000, "4": 3500000, "5": 5000000 }
+  updatedAt            DateTime @updatedAt
+}

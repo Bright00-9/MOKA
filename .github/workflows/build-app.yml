@@ -1,0 +1,83 @@
+name: Build Moka app (APK)
+
+# Builds an installable Android APK on every push and uploads it as a
+# workflow artifact — no Android Studio or local Flutter install needed to
+# test on a real device. Download it from the run's "Summary" page under
+# "Artifacts" once the workflow finishes.
+on:
+  push:
+    branches: ['**']
+    paths:
+      - 'app/**'
+      - '.github/workflows/build-app.yml'
+  workflow_dispatch:
+    inputs:
+      api_base_url:
+        description: 'Backend base URL the app should call (e.g. https://your-api.example.com/api)'
+        required: false
+        default: 'http://10.0.2.2:4000/api'
+      build_mode:
+        description: 'APK build mode'
+        required: false
+        default: 'debug'
+        type: choice
+        options:
+          - debug
+          - release
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java (required by the Android Gradle build)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Scaffold Android platform files
+        # This repo only ships lib/ + pubspec.yaml (the shared Dart source).
+        # `flutter create` on a directory that already has a pubspec.yaml only
+        # fills in the platform folders it's missing (android/, build files,
+        # etc.) — it does not touch existing lib/ or pubspec.yaml.
+        run: |
+          if [ ! -d android ]; then
+            flutter create --platforms=android --org com.moka --project-name moka .
+          fi
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build APK
+        env:
+          API_BASE_URL: ${{ github.event.inputs.api_base_url || 'http://10.0.2.2:4000/api' }}
+          BUILD_MODE: ${{ github.event.inputs.build_mode || 'debug' }}
+        run: |
+          flutter build apk --$BUILD_MODE --dart-define=API_BASE_URL=$API_BASE_URL
+
+      - name: Locate built APK
+        id: find_apk
+        run: |
+          MODE="${{ github.event.inputs.build_mode || 'debug' }}"
+          APK_PATH=$(find build/app/outputs/flutter-apk -name "app-${MODE}.apk" | head -n1)
+          echo "path=$APK_PATH" >> "$GITHUB_OUTPUT"
+
+      - name: Upload APK as build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: moka-app-${{ github.event.inputs.build_mode || 'debug' }}-${{ github.sha }}
+          path: app/${{ steps.find_apk.outputs.path }}
+          retention-days: 14
