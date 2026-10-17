@@ -1,7 +1,7 @@
 resource "aws_security_group" "alb" {
   name        = "${var.project_name}-alb-sg"
   description = "Allow inbound HTTP from the internet to the ALB"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = var.vpc_id
 
   ingress {
     description = "HTTP"
@@ -24,7 +24,7 @@ resource "aws_security_group" "alb" {
 resource "aws_security_group" "backend" {
   name        = "${var.project_name}-backend-sg"
   description = "Allow inbound only from the ALB, on the container port"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = var.vpc_id
 
   ingress {
     description     = "From ALB"
@@ -47,12 +47,12 @@ resource "aws_security_group" "backend" {
 resource "aws_security_group" "rds" {
   name        = "${var.project_name}-rds-sg"
   description = "Allow inbound Postgres only from the backend tasks"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = var.vpc_id
 
   ingress {
     description     = "Postgres from backend"
-    from_port       = 5432
-    to_port         = 5432
+    from_port       = var.rds_port
+    to_port         = var.rds_port
     protocol        = "tcp"
     security_groups = [aws_security_group.backend.id]
   }

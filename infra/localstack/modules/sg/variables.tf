@@ -4,7 +4,17 @@ variable "project_name" {
   default     = "moka"
 }
 
+variable "vpc_id" {
+  description = "VPC ID where the security groups will be created"
+  type        = string
+}
+
 variable "backend_container_port" {
   type    = number
   default = 4000
+}
+
+variable "rds_port" {
+  type    = number
+  default = 5432
 }

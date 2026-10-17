@@ -4,8 +4,6 @@ variable "project_name" {
   default     = "moka"
 }
 
-# App secrets — all pushed into Secrets Manager and injected into the ECS task
-# as `secrets` (not plain env vars), matching how env.ts expects them.
 variable "jwt_secret" {
   type      = string
   sensitive = true
@@ -26,6 +24,12 @@ variable "firebase_private_key" {
   sensitive = true
 }
 
+variable "db_address" {
+  description = "Host for connecting a migration/seed run against the real RDS instance"
+  type        = string
+  sensitive   = true
+}
+
 variable "db_name" {
   type    = string
   default = "moka"
@@ -37,7 +41,7 @@ variable "db_username" {
 }
 
 variable "db_password" {
-  description = "RDS master password — pass via TF_VAR_db_password, never commit it"
+  description = "RDS master password — pass via TF_VAR_db_password"
   type        = string
   sensitive   = true
 }

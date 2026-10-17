@@ -1,6 +1,4 @@
-# Every value env.ts validates at boot as a required secret gets its own Secrets
-# Manager entry, injected into the ECS task definition's `secrets` block (not
-# `environment`) — so `docker inspect` / task metadata never shows plaintext.
+# Every value env.ts validates at boot as a required 
 
 resource "aws_secretsmanager_secret" "database_url" {
   name = "${var.project_name}/database_url"
@@ -8,7 +6,7 @@ resource "aws_secretsmanager_secret" "database_url" {
 
 resource "aws_secretsmanager_secret_version" "database_url" {
   secret_id = aws_secretsmanager_secret.database_url.id
-  secret_string = "postgresql://${var.db_username}:${var.db_password}@${aws_db_instance.main.address}:5432/${var.db_name}"
+  secret_string = "postgresql://${var.db_username}:${var.db_password}@${var.db_address}:5432/${var.db_name}"
 }
 
 resource "aws_secretsmanager_secret" "jwt_secret" {

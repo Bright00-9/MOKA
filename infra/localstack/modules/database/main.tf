@@ -1,6 +1,6 @@
 resource "aws_db_subnet_group" "main" {
   name       = "${var.project_name}-db-subnet-group"
-  subnet_ids = aws_subnet.isolated[*].id
+  subnet_ids = var.isolated_subnet_ids
 
   tags = { Name = "${var.project_name}-db-subnet-group" }
 }
@@ -19,13 +19,12 @@ resource "aws_db_instance" "main" {
   password = var.db_password
 
   db_subnet_group_name   = aws_db_subnet_group.main.name
-  vpc_security_group_ids = [aws_security_group.rds.id]
+  vpc_security_group_ids = [var.security_group_rds_id]
   publicly_accessible    = false
 
-  # Fine for local iteration; the real-AWS build should set this true (or take
-  # a manual final snapshot) so `terraform destroy` can't silently drop data.
-  skip_final_snapshot = true
-  multi_az            = false # single-AZ is fine for LocalStack; real build should reconsider for prod HA
+  #for LocalStack
+  skip_final_snapshot = true 
+  multi_az            = false 
 
   tags = { Name = "${var.project_name}-db" }
 }

@@ -4,6 +4,17 @@ variable "project_name" {
   default     = "moka"
 }
 
+variable "isolated_subnet_ids" {
+  description = "List of isolated subnet IDs for the RDS instance"
+  type        = list(string)
+  default     = []
+}
+
+variable "security_group_rds_id" {
+  description = "The ID of the RDS ingress rule for the created security group."
+  type        = string
+}
+
 variable "db_name" {
   type    = string
   default = "moka"

@@ -2,8 +2,8 @@ resource "aws_lb" "backend" {
   name               = "${var.project_name}-alb"
   internal           = false
   load_balancer_type = "application"
-  security_groups    = [aws_security_group.alb.id]
-  subnets            = aws_subnet.public[*].id
+  security_groups    = [var.security_group_alb_id]
+  subnets            = var.public_subnet_ids
 
   tags = { Name = "${var.project_name}-alb" }
 }
@@ -12,7 +12,7 @@ resource "aws_lb_target_group" "backend" {
   name        = "${var.project_name}-tg"
   port        = var.backend_container_port
   protocol    = "HTTP"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = var.vpc_id
   target_type = "ip" # required for awsvpc network mode (Fargate)
 
   health_check {

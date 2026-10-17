@@ -8,8 +8,6 @@ data "aws_iam_policy_document" "ecs_assume_role" {
   }
 }
 
-# Execution role: what ECS itself needs to start the task (pull from ECR,
-# write to CloudWatch Logs, read the Secrets Manager values into env vars).
 resource "aws_iam_role" "ecs_execution" {
   name               = "${var.project_name}-ecs-execution-role"
   assume_role_policy = data.aws_iam_policy_document.ecs_assume_role.json
@@ -39,9 +37,7 @@ resource "aws_iam_role_policy" "ecs_execution_secrets" {
   policy = data.aws_iam_policy_document.ecs_execution_secrets.json
 }
 
-# Task role: what the RUNNING application is allowed to do via the AWS SDK.
-# Empty for now — the backend doesn't call any AWS APIs itself. Attach
-# narrowly-scoped policies here if that changes (e.g. S3 for file uploads).
+#For future AWS services calls from the backend container, e.g. S3 (image uploads), DynamoDB, etc.
 resource "aws_iam_role" "ecs_task" {
   name               = "${var.project_name}-ecs-task-role"
   assume_role_policy = data.aws_iam_policy_document.ecs_assume_role.json
